@@ -54,25 +54,28 @@ function parseOutput(results) {
 
 function mergeVerticalPics(verticalPics) {
 	console.log('mergeVerticalPics start')
+	console.log('abbiamo' + verticalPics.length + 'foto verticali')
 	const bffList = [];
 	while (verticalPics.length > 1) {
 		let pic = verticalPics.splice(0, 1)[0];
 		let bfIndex = undefined;
-		let bfTags = [];
+		let bfTags = new Set([]);
 		//find best friend
 		for (let i = 0; i < verticalPics.length; i++) {
 			let newBffTags = new Set(verticalPics[i].tags.concat(pic.tags))
-			if (newBffTags.size > bfTags.length) {
+			if (newBffTags.size >bfTags.size) {
 				bfTags = newBffTags;
 				bfIndex = i;
 			}
 		}
-		bffList.push({
+		const newSlide = {
 			id: [pic.id, verticalPics.splice(bfIndex, 1)[0].id],
 			orientation: '2V',
 			tagsNumber: bfTags.size,
 			tags: bfTags
-		})
+		};
+		//console.log(newSlide)
+		bffList.push(newSlide)
 	}
 	console.log('mergeVerticalPics end')
 	return bffList;
@@ -82,7 +85,6 @@ function calculateMatches(item1, item2) {
 	let matches = 0;
 	if(item2 && item1) {
 		item1.tagsNumber < item2.tagsNumber ? item1.tags.forEach(item => item2.tags.has(item) ? matches++ : null) : item2.tags.forEach(item => item1.tags.has(item) ? matches++ : null)
-
 	}
 	return matches
 }
@@ -110,12 +112,12 @@ function getSlideshow(horizontalPics, verticalPics) {
 	const doubleVerticalPics = mergeVerticalPics(verticalPics)
 	let allSlides = horizontalPics.concat(doubleVerticalPics)
 	allSlides = allSlides.sort((a,b) => a.tagsNumber - b.tagsNumber)
-
 	const result = allSlides.splice(0, 1);
 
 	while (allSlides.length > 0) {
 		const theSlide = getBestMatch(result[result.length - 1], allSlides);
 		result.push(theSlide);
+		//console.log(allSlides)
 	}
 	// console.log(result)
 	return result;
@@ -123,8 +125,6 @@ function getSlideshow(horizontalPics, verticalPics) {
 
 const content = readContent();
 const { horizontalPics, verticalPics } = parseInput(content);
-//console.log(horizontalPics);
-//console.log(verticalPics);
 
 const result = getSlideshow(horizontalPics, verticalPics);
 
