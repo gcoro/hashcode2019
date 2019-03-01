@@ -58,11 +58,11 @@ function mergeVerticalPics(verticalPics) {
 	while (verticalPics.length > 1) {
 		let pic = verticalPics.splice(0, 1)[0];
 		let bfIndex = undefined;
-		let bfTags = [];
+		let bfTags = new Set([]);
 		//find best friend
 		for (let i = 0; i < verticalPics.length; i++) {
 			let newBffTags = new Set(verticalPics[i].tags.concat(pic.tags))
-			if (newBffTags.size > bfTags.length) {
+			if (newBffTags.size >bfTags.size) {
 				bfTags = newBffTags;
 				bfIndex = i;
 			}
@@ -73,6 +73,7 @@ function mergeVerticalPics(verticalPics) {
 			tagsNumber: bfTags.size,
 			tags: bfTags
 		})
+		console.log('remaining vertical:'+ verticalPics.length)
 	}
 	console.log('mergeVerticalPics end')
 	return bffList;
@@ -101,6 +102,7 @@ function getBestMatch(initialSlide, remaining) {
 			max = { slide: j, count: count2 };
 		}
 	}
+	console.log('remaining vertical:'+ remaining.length)
 	return remaining.splice(max.slide, 1)[0];
 }
 
