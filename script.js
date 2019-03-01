@@ -1,0 +1,133 @@
+const path = process.argv[2];
+const name = path.split('/')[path.split('/').length - 1].split('.')[0];
+const fs = require('fs');
+
+function readContent() {
+	return fs.readFileSync(path, 'utf8');
+}
+
+function writeToFile(rows) {
+	fs.writeFileSync('./' + name + '.out', rows.join('\n'), 'utf8')
+}
+
+function parseInput(contentToParse) {
+	console.log('parse input start')
+	const lines = contentToParse.split('\n');
+	if (lines[lines.length - 1] === '')
+		lines.splice(lines.length - 1, 1);
+	const photosNumber = lines.splice(0, 1);
+	const horizontalPics = [];
+	const verticalPics = [];
+	for (let i = 0; i < photosNumber; i++) {
+		const line = lines[i].split(' ');
+		const id = i;
+		const orientation = line[0];
+		const tagsNumber = line[1];
+		const tags = [];
+		for (let j = 0; j < tagsNumber; j++) {
+			tags.push(line[2 + j]);
+		}
+
+		if (orientation === 'H') {
+			horizontalPics.push({ id, orientation, tagsNumber, tags: new Set(tags) })
+		} else {
+			verticalPics.push({ id, orientation, tagsNumber, tags })
+		}
+	}
+	console.log('parse input end')
+	return {
+		horizontalPics, verticalPics
+	};
+}
+
+function parseOutput(results) {
+	const number = result.length;
+	const rest = results.map(item => {
+		if (item.orientation === '2V')
+			return `${item.id[0]} ${item.id[1]}`;
+		else
+			return item.id;
+	})
+
+	return [number].concat(rest);
+}
+
+function mergeVerticalPics(verticalPics) {
+	console.log('mergeVerticalPics start')
+	const bffList = [];
+	while (verticalPics.length > 1) {
+		let pic = verticalPics.splice(0, 1)[0];
+		let bfIndex = undefined;
+		let bfTags = [];
+		//find best friend
+		for (let i = 0; i < verticalPics.length; i++) {
+			let newBffTags = new Set(verticalPics[i].tags.concat(pic.tags))
+			if (newBffTags.size > bfTags.length) {
+				bfTags = newBffTags;
+				bfIndex = i;
+			}
+		}
+		bffList.push({
+			id: [pic.id, verticalPics.splice(bfIndex, 1)[0].id],
+			orientation: '2V',
+			tagsNumber: bfTags.size,
+			tags: bfTags
+		})
+	}
+	console.log('mergeVerticalPics end')
+	return bffList;
+}
+
+function calculateMatches(item1, item2) {
+	let matches = 0;
+	if(item2 && item1) {
+		item1.tagsNumber < item2.tagsNumber ? item1.tags.forEach(item => item2.tags.has(item) ? matches++ : null) : item2.tags.forEach(item => item1.tags.has(item) ? matches++ : null)
+
+	}
+	return matches
+}
+
+function getBestMatch(initialSlide, remaining) {
+	if (remaining.length === 1)
+		return remaining.splice(0, 1)[0];
+	const maxPossible = Math.floor(initialSlide.tags.size / 2)
+	let max = { slide: undefined, count: 0 };
+	for (let j = 0; j < remaining.length && maxPossible !== max.count; j++) {
+		const matches = calculateMatches(initialSlide, remaining[j])
+		const s1only = initialSlide.tagsNumber - matches;
+		const s2only = remaining[j].tagsNumber - matches;
+		const count2 = Math.min(s1only, s2only, matches)
+		if (count2 > max.count) {
+			max = { slide: j, count: count2 };
+		}
+	}
+	return remaining.splice(max.slide, 1)[0];
+}
+
+
+
+function getSlideshow(horizontalPics, verticalPics) {
+	const doubleVerticalPics = mergeVerticalPics(verticalPics)
+	let allSlides = horizontalPics.concat(doubleVerticalPics)
+	allSlides = allSlides.sort((a,b) => a.tagsNumber - b.tagsNumber)
+
+	const result = allSlides.splice(0, 1);
+
+	while (allSlides.length > 0) {
+		const theSlide = getBestMatch(result[result.length - 1], allSlides);
+		result.push(theSlide);
+	}
+	// console.log(result)
+	return result;
+}
+
+const content = readContent();
+const { horizontalPics, verticalPics } = parseInput(content);
+//console.log(horizontalPics);
+//console.log(verticalPics);
+
+const result = getSlideshow(horizontalPics, verticalPics);
+
+const parsedOutput = parseOutput(result);
+
+writeToFile(parsedOutput);
