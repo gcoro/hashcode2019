@@ -102,7 +102,7 @@ function getBestMatch(initialSlide, remaining) {
 			max = { slide: j, count: count2 };
 		}
 	}
-	console.log('remaining vertical:'+ remaining.length)
+	console.log('remaining:'+ remaining.length)
 	return remaining.splice(max.slide, 1)[0];
 }
 
