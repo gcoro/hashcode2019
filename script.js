@@ -1,9 +1,10 @@
 const path = process.argv[2];
 const name = path.split('/')[path.split('/').length - 1].split('.')[0];
 const fs = require('fs');
+const now = require("performance-now")
 
 const readContent = () => {
-	return fs.readFileSync(path, 'utf8');
+    return fs.readFileSync(path, 'utf8');
 }
 
 const writeToFile = (rows) => {
@@ -11,6 +12,7 @@ const writeToFile = (rows) => {
 }
 
 const parseInput = (contentToParse) => {
+    const start = now();
 	const lines = contentToParse.split('\n');
 	if (lines[lines.length - 1] === '')
 		lines.splice(lines.length - 1, 1);
@@ -32,24 +34,30 @@ const parseInput = (contentToParse) => {
 		} else {
 			verticalPics.push({ id, orientation, tagsNumber, tags })
 		}
-	}
-	console.log('finished parsing input')
+    }
+    const end = now()
+    console.log(`parseInput took ${(end - start).toFixed(3)} ms`);
 	return { horizontalPics, verticalPics };
 }
 
 const parseOutput = (results) => {
+    const start = now();
+
 	const number = result.length;
 	const rest = results.map(item => {
 		if (item.orientation === '2V')
 			return `${item.id[0]} ${item.id[1]}`;
 		else
 			return item.id;
-	})
-
+    })
+    
+    const end = now()
+    console.log(`parseOutput took ${(end - start).toFixed(3)} ms`);
 	return [number].concat(rest);
 }
 
 const mergeVerticalPics = (verticalPics) => {
+    const start = now();
 	const mergedSlides = [];
 	while (verticalPics.length > 1) {
 		let currentPic = verticalPics.splice(0, 1)[0];
@@ -72,8 +80,11 @@ const mergeVerticalPics = (verticalPics) => {
 			tags: bestMatchTags
 		};
 		mergedSlides.push(newSlide)
-	}
-	return mergedSlides;
+    }
+
+    const end = now()
+    console.log(`mergeVerticalPics took ${(end - start).toFixed(3)} ms`);
+    return mergedSlides;
 }
 
 const calculateMatches = (item1, item2) => {
@@ -102,6 +113,7 @@ const getBestMatch = (initialSlide, remaining) => {
 }
 
 const getSlideshow = (horizontalPics, verticalPics) => {
+    const start = now();
 	const doubleVerticalPics = mergeVerticalPics(verticalPics)
 	let allSlides = horizontalPics.concat(doubleVerticalPics)
 	allSlides = allSlides.sort((a, b) => a.tagsNumber - b.tagsNumber)
@@ -109,12 +121,15 @@ const getSlideshow = (horizontalPics, verticalPics) => {
 	while (allSlides.length > 0) {
 		const theSlide = getBestMatch(result[result.length - 1], allSlides);
 		result.push(theSlide);
-	}
-	return result;
+    }
+    const end = now()
+    console.log(`getSlideshow took ${(end - start).toFixed(3)} ms`);
+    return result;
 }
 
 const content = readContent();
 const { horizontalPics, verticalPics } = parseInput(content);
 const result = getSlideshow(horizontalPics, verticalPics);
 const parsedOutput = parseOutput(result);
+
 writeToFile(parsedOutput);
