@@ -26,5 +26,8 @@
   "homepage": "https://github.com/gcoro/hashcode2019#readme",
   "dependencies": {
     "performance-now": "2.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.15.0"
   }
 }

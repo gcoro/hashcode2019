@@ -1,131 +1,133 @@
 const path = process.argv[2];
 const name = path.split('/')[path.split('/').length - 1].split('.')[0];
 const fs = require('fs');
-const now = require("performance-now")
+const now = require('performance-now');
 
 const readContent = () => {
     return fs.readFileSync(path, 'utf8');
-}
+};
 
 const writeToFile = (rows) => {
-	fs.writeFileSync('./' + name + '.out', rows.join('\n'), 'utf8')
-}
+    fs.writeFileSync('./' + name + '.out', rows.join('\n'), 'utf8');
+};
 
 const parseInput = (contentToParse) => {
     const start = now();
-	const lines = contentToParse.split('\n');
-	if (lines[lines.length - 1] === '')
-		lines.splice(lines.length - 1, 1);
-	const photosNumber = lines.splice(0, 1);
-	const horizontalPics = [];
-	const verticalPics = [];
-	for (let i = 0; i < photosNumber; i++) {
-		const line = lines[i].split(' ');
-		const id = i;
-		const orientation = line[0];
-		const tagsNumber = line[1];
-		const tags = [];
-		for (let j = 0; j < tagsNumber; j++) {
-			tags.push(line[2 + j]);
-		}
+    const lines = contentToParse.split('\n');
+    if (lines[lines.length - 1] === '')
+        lines.splice(lines.length - 1, 1);
+    const photosNumber = lines.splice(0, 1);
+    const horizontalPics = [];
+    const verticalPics = [];
+    for (let i = 0; i < photosNumber; i++) {
+        const line = lines[i].split(' ');
+        const id = i;
+        const orientation = line[0];
+        const tagsNumber = line[1];
+        const tags = [];
+        for (let j = 0; j < tagsNumber; j++) {
+            tags.push(line[2 + j]);
+        }
 
-		if (orientation === 'H') {
-			horizontalPics.push({ id, orientation, tagsNumber, tags: new Set(tags) })
-		} else {
-			verticalPics.push({ id, orientation, tagsNumber, tags })
-		}
+        if (orientation === 'H') {
+            horizontalPics.push({ id, orientation, tagsNumber, tags: new Set(tags) });
+        } else {
+            verticalPics.push({ id, orientation, tagsNumber, tags });
+        }
     }
-    const end = now()
+    const end = now();
     console.log(`parseInput took ${(end - start).toFixed(3)} ms`);
-	return { horizontalPics, verticalPics };
-}
+    return { horizontalPics, verticalPics };
+};
 
 const parseOutput = (results) => {
     const start = now();
 
-	const number = result.length;
-	const rest = results.map(item => {
-		if (item.orientation === '2V')
-			return `${item.id[0]} ${item.id[1]}`;
-		else
-			return item.id;
-    })
-    
-    const end = now()
+    const number = result.length;
+    const rest = results.map(item => {
+        if (item.orientation === '2V')
+            return `${item.id[0]} ${item.id[1]}`;
+        else
+            return item.id;
+    });
+
+    const end = now();
     console.log(`parseOutput took ${(end - start).toFixed(3)} ms`);
-	return [number].concat(rest);
-}
+    return [number].concat(rest);
+};
 
 const mergeVerticalPics = (verticalPics) => {
     const start = now();
-	const mergedSlides = [];
-	while (verticalPics.length > 1) {
-		let currentPic = verticalPics.splice(0, 1)[0];
-		let bestMatchIndex = undefined;
+    const mergedSlides = [];
+    while (verticalPics.length > 1) {
+        let currentPic = verticalPics.splice(0, 1)[0];
+        let bestMatchIndex = undefined;
         let bestMatchTags = new Set([]);
         let minTagsInCommon = Number.MAX_SAFE_INTEGER;
-		for (let i = 0; i < verticalPics.length; i++) {
+        for (let i = 0; i < verticalPics.length; i++) {
             const resultingTags = new Set(verticalPics[i].tags.concat(currentPic.tags));
             const numberOfTagsInCommon = verticalPics[i].tags.length + currentPic.tags.length - resultingTags.size;
-			if (numberOfTagsInCommon < minTagsInCommon) {
-				bestMatchTags = resultingTags;
+            if (numberOfTagsInCommon < minTagsInCommon) {
+                bestMatchTags = resultingTags;
                 bestMatchIndex = i;
                 minTagsInCommon = numberOfTagsInCommon;
-			}
-		}
-		const newSlide = {
-			id: [currentPic.id, verticalPics.splice(bestMatchIndex, 1)[0].id],
-			orientation: '2V',
-			tagsNumber: bestMatchTags.size,
-			tags: bestMatchTags
-		};
-		mergedSlides.push(newSlide)
+            }
+        }
+        const newSlide = {
+            id: [currentPic.id, verticalPics.splice(bestMatchIndex, 1)[0].id],
+            orientation: '2V',
+            tagsNumber: bestMatchTags.size,
+            tags: bestMatchTags
+        };
+        mergedSlides.push(newSlide);
     }
 
-    const end = now()
+    const end = now();
     console.log(`mergeVerticalPics took ${(end - start).toFixed(3)} ms`);
     return mergedSlides;
-}
+};
 
 const calculateMatches = (item1, item2) => {
-	let matches = 0;
-	if (item2 && item1) {
-		item1.tagsNumber < item2.tagsNumber ? item1.tags.forEach(item => item2.tags.has(item) ? matches++ : null) : item2.tags.forEach(item => item1.tags.has(item) ? matches++ : null)
-	}
-	return matches;
-}
+    let matches = 0;
+    if (item2 && item1) {
+        item1.tagsNumber < item2.tagsNumber
+            ? item1.tags.forEach(item => item2.tags.has(item) ? matches++ : null)
+            : item2.tags.forEach(item => item1.tags.has(item) ? matches++ : null);
+    }
+    return matches;
+};
 
 const getBestMatch = (initialSlide, remaining) => {
-	if (remaining.length === 1)
-		return remaining.splice(0, 1)[0];
-	const maxPossible = Math.floor(initialSlide.tags.size / 2)
-	let max = { slide: undefined, count: 0 };
-	for (let j = 0; j < remaining.length && maxPossible !== max.count; j++) {
-		const matches = calculateMatches(initialSlide, remaining[j])
-		const s1only = initialSlide.tagsNumber - matches;
-		const s2only = remaining[j].tagsNumber - matches;
-		const count = Math.min(s1only, s2only, matches)
-		if (count > max.count) {
-			max = { slide: j, count };
-		}
-	}
-	return remaining.splice(max.slide, 1)[0];
-}
+    if (remaining.length === 1)
+        return remaining.splice(0, 1)[0];
+    const maxPossible = Math.floor(initialSlide.tags.size / 2);
+    let max = { slide: undefined, count: 0 };
+    for (let j = 0; j < remaining.length && maxPossible !== max.count; j++) {
+        const matches = calculateMatches(initialSlide, remaining[j]);
+        const s1only = initialSlide.tagsNumber - matches;
+        const s2only = remaining[j].tagsNumber - matches;
+        const count = Math.min(s1only, s2only, matches);
+        if (count > max.count) {
+            max = { slide: j, count };
+        }
+    }
+    return remaining.splice(max.slide, 1)[0];
+};
 
 const getSlideshow = (horizontalPics, verticalPics) => {
     const start = now();
-	const doubleVerticalPics = mergeVerticalPics(verticalPics)
-	let allSlides = horizontalPics.concat(doubleVerticalPics)
-	allSlides = allSlides.sort((a, b) => a.tagsNumber - b.tagsNumber)
-	const result = allSlides.splice(0, 1);
-	while (allSlides.length > 0) {
-		const theSlide = getBestMatch(result[result.length - 1], allSlides);
-		result.push(theSlide);
+    const doubleVerticalPics = mergeVerticalPics(verticalPics);
+    let allSlides = horizontalPics.concat(doubleVerticalPics);
+    allSlides = allSlides.sort((a, b) => a.tagsNumber - b.tagsNumber);
+    const result = allSlides.splice(0, 1);
+    while (allSlides.length > 0) {
+        const theSlide = getBestMatch(result[result.length - 1], allSlides);
+        result.push(theSlide);
     }
-    const end = now()
+    const end = now();
     console.log(`getSlideshow took ${(end - start).toFixed(3)} ms`);
     return result;
-}
+};
 
 const content = readContent();
 const { horizontalPics, verticalPics } = parseInput(content);
