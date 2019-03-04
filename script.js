@@ -50,32 +50,30 @@ const parseOutput = (results) => {
 }
 
 const mergeVerticalPics = (verticalPics) => {
-	console.log('mergeVerticalPics start')
-	console.log('abbiamo' + verticalPics.length + 'foto verticali')
-	const bffList = [];
+	const mergedSlides = [];
 	while (verticalPics.length > 1) {
-		let pic = verticalPics.splice(0, 1)[0];
-		let currentBestMatchIndex = undefined;
-		let currentBestMatchTags = new Set([]);
-		//find best friend
+		let currentPic = verticalPics.splice(0, 1)[0];
+		let bestMatchIndex = undefined;
+        let bestMatchTags = new Set([]);
+        let minTagsInCommon = Number.MAX_SAFE_INTEGER;
 		for (let i = 0; i < verticalPics.length; i++) {
-			let newBffTags = new Set(verticalPics[i].tags.concat(pic.tags))
-			if (newBffTags.size > currentBestMatchTags.size) {
-				currentBestMatchTags = newBffTags;
-				currentBestMatchIndex = i;
+            const resultingTags = new Set(verticalPics[i].tags.concat(currentPic.tags));
+            const numberOfTagsInCommon = verticalPics[i].tags.length + currentPic.tags.length - resultingTags.size;
+			if (numberOfTagsInCommon < minTagsInCommon) {
+				bestMatchTags = resultingTags;
+                bestMatchIndex = i;
+                minTagsInCommon = numberOfTagsInCommon;
 			}
 		}
 		const newSlide = {
-			id: [pic.id, verticalPics.splice(currentBestMatchIndex, 1)[0].id],
+			id: [currentPic.id, verticalPics.splice(bestMatchIndex, 1)[0].id],
 			orientation: '2V',
-			tagsNumber: currentBestMatchTags.size,
-			tags: currentBestMatchTags
+			tagsNumber: bestMatchTags.size,
+			tags: bestMatchTags
 		};
-		console.log(newSlide)
-		bffList.push(newSlide)
+		mergedSlides.push(newSlide)
 	}
-	console.log('mergeVerticalPics end')
-	return bffList;
+	return mergedSlides;
 }
 
 const calculateMatches = (item1, item2) => {
@@ -83,7 +81,7 @@ const calculateMatches = (item1, item2) => {
 	if (item2 && item1) {
 		item1.tagsNumber < item2.tagsNumber ? item1.tags.forEach(item => item2.tags.has(item) ? matches++ : null) : item2.tags.forEach(item => item1.tags.has(item) ? matches++ : null)
 	}
-	return matches
+	return matches;
 }
 
 const getBestMatch = (initialSlide, remaining) => {
@@ -108,21 +106,15 @@ const getSlideshow = (horizontalPics, verticalPics) => {
 	let allSlides = horizontalPics.concat(doubleVerticalPics)
 	allSlides = allSlides.sort((a, b) => a.tagsNumber - b.tagsNumber)
 	const result = allSlides.splice(0, 1);
-
 	while (allSlides.length > 0) {
 		const theSlide = getBestMatch(result[result.length - 1], allSlides);
 		result.push(theSlide);
-		console.log(allSlides)
 	}
-	// console.log(result)
 	return result;
 }
 
 const content = readContent();
 const { horizontalPics, verticalPics } = parseInput(content);
-
 const result = getSlideshow(horizontalPics, verticalPics);
-
 const parsedOutput = parseOutput(result);
-
 writeToFile(parsedOutput);
