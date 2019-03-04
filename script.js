@@ -63,14 +63,11 @@ const mergeVerticalPics = (verticalPics) => {
         let currentPic = verticalPics.splice(0, 1)[0];
         let bestMatchIndex = undefined;
         let bestMatchTags = new Set([]);
-        let minTagsInCommon = Number.MAX_SAFE_INTEGER;
         for (let i = 0; i < verticalPics.length; i++) {
             const resultingTags = new Set(verticalPics[i].tags.concat(currentPic.tags));
-            const numberOfTagsInCommon = verticalPics[i].tags.length + currentPic.tags.length - resultingTags.size;
-            if (numberOfTagsInCommon < minTagsInCommon) {
+            if (resultingTags.size > bestMatchTags.size) {
                 bestMatchTags = resultingTags;
                 bestMatchIndex = i;
-                minTagsInCommon = numberOfTagsInCommon;
             }
         }
         const newSlide = {
