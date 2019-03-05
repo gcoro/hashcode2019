@@ -1,0 +1,33 @@
+{
+  "name": "hashcode2019",
+  "version": "1.0.0",
+  "description": "our solution for the hashcode 2019 challenge - team prosciutto&funghi",
+  "main": "script.js",
+  "scripts": {
+    "start": "node script.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gcoro/hashcode2019.git"
+  },
+  "keywords": [
+    "hashcode",
+    "2019",
+    "slideshow",
+    "prosciutto&funghi",
+    "italy"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gcoro/hashcode2019/issues"
+  },
+  "homepage": "https://github.com/gcoro/hashcode2019#readme",
+  "dependencies": {
+    "performance-now": "2.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.15.0"
+  }
+}
