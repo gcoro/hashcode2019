@@ -59,7 +59,7 @@ const parseOutput = (results) => {
 const mergeVerticalPics = (verticalPics) => {
     const start = now();
     const mergedSlides = [];
-    verticalPics = verticalPics.sort((a, b) => a.tagsNumber - b.tagsNumber)
+    verticalPics = verticalPics.sort((a, b) => a.tagsNumber - b.tagsNumber);
     while (verticalPics.length > 1) {
         let currentPic = verticalPics.splice(0, 1)[0];
         let bestMatchIndex = undefined;
@@ -85,13 +85,11 @@ const mergeVerticalPics = (verticalPics) => {
     return mergedSlides;
 };
 
-const calculateMatches = (item1, item2) => {
+const calculateMatches = (slide1, slide2) => {
     let matches = 0;
-    if (item2 && item1) {
-        item1.tagsNumber < item2.tagsNumber
-            ? item1.tags.forEach(item => item2.tags.has(item) ? matches++ : null)
-            : item2.tags.forEach(item => item1.tags.has(item) ? matches++ : null);
-    }
+    slide1.tagsNumber < slide2.tagsNumber
+        ? slide1.tags.forEach(tag => { if (slide2.tags.has(tag)) matches++ })
+        : slide2.tags.forEach(tag => { if (slide1.tags.has(tag)) matches++ })
     return matches;
 };
 
