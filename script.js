@@ -59,6 +59,7 @@ const parseOutput = (results) => {
 const mergeVerticalPics = (verticalPics) => {
     const start = now();
     const mergedSlides = [];
+    verticalPics = verticalPics.sort((a, b) => a.tagsNumber - b.tagsNumber)
     while (verticalPics.length > 1) {
         let currentPic = verticalPics.splice(0, 1)[0];
         let bestMatchIndex = undefined;
